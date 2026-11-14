@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#00a651">
+<title>Grab English</title>
+<style>
+:root{--bg:#f4f6f4;--card:#fff;--tx:#14201a;--mu:#5d6b63;--ac:#00a651;--ac2:#e6f6ed;--bd:#dde4df;--bad:#d9534f}
+@media (prefers-color-scheme:dark){:root{--bg:#101613;--card:#1a231e;--tx:#eef3ef;--mu:#9aa8a0;--ac:#2fd078;--ac2:#18342a;--bd:#2b3a32;--bad:#ff7b72}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,"Noto Sans Thai",sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}.sub{color:var(--mu);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px}
+.sc{display:flex;gap:12px;align-items:center;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.sc b{display:block}.sc small{color:var(--mu)}.em{font-size:28px}
+button{font:inherit;color:inherit}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
+.btn.o{background:var(--ac2);color:var(--ac)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bub{background:var(--ac2);border-radius:16px 16px 16px 4px;padding:12px 14px;margin-bottom:8px}
+.en{font-size:19px;font-weight:600}.th{color:var(--mu);font-size:14px}
+.lbl{font-size:12px;color:var(--mu);margin:12px 0 4px}
+.you{border-left:4px solid var(--ac)}
+.res{margin-top:10px;font-size:15px}.w{color:var(--bad);font-weight:600}.ok{color:var(--ac);font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.link{background:none;border:0;color:var(--ac);cursor:pointer;font-weight:600;padding:6px 4px}
+.bar{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;background:var(--ac)}
+.tip{font-size:13px;color:var(--mu);margin-top:8px}
+textarea,input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var DEF=[{title:"รับผู้โดยสาร",emoji:"🚗",lines:[
+{passenger:"Hi, are you my driver?",passengerTh:"สวัสดี คุณเป็นคนขับของฉันใช่ไหม",reply:"Yes, are you Mr. Smith?",replyTh:"ใช่ครับ คุณสมิธใช่ไหมครับ"},
+{passenger:"Can you put my bag in the trunk?",passengerTh:"ช่วยใส่กระเป๋าในท้ายรถได้ไหม",reply:"Sure, no problem. Let me open it for you.",replyTh:"ได้ครับ เดี๋ยวผมเปิดให้"},
+{passenger:"Could you turn the air-con up a bit?",passengerTh:"ช่วยเร่งแอร์หน่อยได้ไหม",reply:"Sure. Is that better?",replyTh:"ได้ครับ แบบนี้ดีขึ้นไหมครับ"}]}];
+var $=function(s){return document.querySelector(s)};
+var D=[],st={i:0,j:0,th:true},prog={};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function save(){try{localStorage.setItem("ge_data",JSON.stringify(D));localStorage.setItem("ge_prog",JSON.stringify(prog))}catch(x){}}
+function init(){try{prog=JSON.parse(localStorage.getItem("ge_prog")||"{}");var r=localStorage.getItem("ge_data");if(r){D=JSON.parse(r);if(D.length){home();return}}}catch(x){}
+reset()}
+function reset(){D=JSON.parse(JSON.stringify(DEF));prog={};save();home()}
+function speak(t){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u)}catch(x){}}
+function norm(s){return s.toLowerCase().replace(/[’']/g,"").replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(Boolean)}
+function form(title,labels,vals,cb,back){var h='<h1>'+title+'</h1>';labels.forEach(function(l,i){h+='<div class="lbl">'+l+'</div><textarea id="f'+i+'" rows="2">'+esc(vals[i]||"")+'</textarea>'});
+h+='<div class="row" style="margin-top:12px"><button class="btn" id="fs">บันทึก</button><button class="btn o" id="fc">ยกเลิก</button></div>';
+$("#app").innerHTML=h;$("#fs").onclick=function(){cb(labels.map(function(_,i){return $("#f"+i).value.trim()}))};$("#fc").onclick=back}
+function home(){var h='<div class="top"><h1>🚕 Grab English</h1><button class="link" onclick="backup()">สำรอง/นำเข้า</button></div><p class="sub">ฝึกพูดกับผู้โดยสารต่างชาติ ใช้ออฟไลน์ได้</p>';
+D.forEach(function(s,k){h+='<div class="card row"><button class="sc" style="flex:1;border:0;background:none;padding:0" onclick="go('+k+')"><span class="em">'+esc(s.emoji)+'</span><span><b>'+esc(s.title)+'</b><small>ผ่านแล้ว '+Math.min(prog[k]||0,s.lines.length)+'/'+s.lines.length+' ประโยค</small></span></button><button class="link" onclick="editScn('+k+')">แก้ไข</button></div>'});
+h+='<button class="btn" onclick="editScn(-1)">＋ เพิ่มหมวดใหม่</button><p class="tip">ปุ่มไมค์ต้องอนุญาตไมโครโฟนและมีเน็ต ถ้าไมค์ไม่ทำงานให้พิมพ์ประโยคที่พูดแทนได้</p>';
+$("#app").innerHTML=h}
+function editScn(k){var n=k<0,s=n?{title:"",emoji:"🚗",lines:[]}:D[k];form(n?"เพิ่มหมวด":"แก้ไขหมวด",["ชื่อหมวด","อีโมจิ"],[s.title,s.emoji],function(v){if(!v[0])return;s.title=v[0];s.emoji=v[1]||"🚗";if(n)D.push(s);save();home()},home);
+if(!n){var b=document.createElement("button");b.className="btn o";b.style.marginTop="12px";b.textContent="🗑 ลบหมวดนี้";b.onclick=function(){if(confirm("ลบหมวดนี้?")){D.splice(k,1);save();home()}};$("#app").appendChild(b)}}
+function backup(){$("#app").innerHTML='<div class="top"><button class="link" onclick="home()">← กลับ</button></div><h1>สำรอง/นำเข้า</h1><textarea id="bk" rows="10"></textarea><div class="row" style="margin-top:10px"><button class="btn o" id="b1">คัดลอกทั้งหมด</button><button class="btn" id="b2">นำเข้า (เพิ่มต่อท้าย)</button><button class="btn o" id="b3">รีเซ็ต</button></div><div class="res" id="bm"></div>';
+$("#bk").value=JSON.stringify({scenarios:D},null,1);
+$("#b1").onclick=function(){$("#bk").select();try{navigator.clipboard.writeText($("#bk").value)}catch(x){document.execCommand("copy")}$("#bm").textContent="คัดลอกแล้ว"};
+$("#b2").onclick=function(){try{var j=JSON.parse($("#bk").value);D=D.concat(j.scenarios);save();home()}catch(x){$("#bm").textContent="รูปแบบ JSON ไม่ถูกต้อง"}};
+$("#b3").onclick=function(){if(confirm("ข้อมูลที่เพิ่มเองจะหายทั้งหมด ต้องการรีเซ็ตไหม?"))reset()}}
+function go(k){st.i=k;st.j=0;turn()}
+function editLine(isNew){var s=D[st.i],L=isNew?{passenger:"",passengerTh:"",reply:"",replyTh:""}:s.lines[st.j];
+form(isNew?"เพิ่มประโยค":"แก้ไขประโยค",["ผู้โดยสารพูด (อังกฤษ)","คำแปลไทย","คุณตอบ (อังกฤษ)","คำแปลไทย"],[L.passenger,L.passengerTh,L.reply,L.replyTh],function(v){if(!v[0]||!v[2])return;var n={passenger:v[0],passengerTh:v[1],reply:v[2],replyTh:v[3]};if(isNew){s.lines.push(n);st.j=s.lines.length-1}else s.lines[st.j]=n;save();turn()},turn)}
+function delLine(){if(!confirm("ลบประโยคนี้?"))return;var s=D[st.i];s.lines.splice(st.j,1);if(st.j>0)st.j--;save();turn()}
+function turn(){var s=D[st.i];var h='<div class="top"><button class="link" onclick="home()">← กลับ</button><span>'+esc(s.emoji)+' '+esc(s.title)+'</span><button class="link" onclick="st.th=!st.th;turn()">'+(st.th?"ซ่อนแปล":"แสดงแปล")+'</button></div>';
+if(!s.lines.length){$("#app").innerHTML=h+'<p>ยังไม่มีประโยคในหมวดนี้</p><button class="btn" onclick="editLine(true)">＋ เพิ่มประโยค</button>';return}
+var L=s.lines[st.j];
+h+='<div class="bar"><i style="width:'+((st.j+1)/s.lines.length*100)+'%"></i></div><div class="lbl">ผู้โดยสารพูดว่า</div><div class="bub"><div class="en">'+esc(L.passenger)+'</div>'+(st.th?'<div class="th">'+esc(L.passengerTh)+'</div>':'')+'</div><button class="btn o" id="sp1">🔊 ฟังประโยค</button>'+
+'<div class="lbl">คุณตอบว่า</div><div class="card you"><div class="en">'+esc(L.reply)+'</div>'+(st.th?'<div class="th">'+esc(L.replyTh)+'</div>':'')+
+'<div class="row" style="margin-top:10px"><button class="btn o" id="sp2">🔊 ฟังตัวอย่าง</button><button class="btn" id="mic">🎤 พูดตาม</button></div>'+
+'<div class="row" style="margin-top:10px;flex-wrap:nowrap"><input id="tx" placeholder="หรือพิมพ์ประโยคที่พูด"><button class="btn o" id="ck">ตรวจ</button></div><div class="res" id="res"></div></div>'+
+'<div class="row" style="justify-content:space-between"><button class="btn o" id="pv">←</button><span>'+(st.j+1)+'/'+s.lines.length+'</span><button class="btn" id="nx">ถัดไป →</button></div>'+
+'<div class="row" style="margin-top:14px"><button class="link" onclick="editLine(true)">＋ เพิ่ม</button><button class="link" onclick="editLine(false)">✏️ แก้ไข</button><button class="link" onclick="delLine()">🗑 ลบ</button></div>';
+$("#app").innerHTML=h;
+$("#sp1").onclick=function(){speak(L.passenger)};$("#sp2").onclick=function(){speak(L.reply)};
+$("#mic").onclick=listen;$("#ck").onclick=function(){var v=$("#tx").value;if(v)check(v)};
+$("#pv").onclick=function(){if(st.j>0){st.j--;turn()}};
+$("#nx").onclick=function(){if(st.j<s.lines.length-1){st.j++;turn()}else home()};
+setTimeout(function(){speak(L.passenger)},300)}
+function listen(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition,r=$("#res"),m=$("#mic");
+if(!SR){r.textContent="เครื่องนี้ไม่รองรับการจดจำเสียง ให้พิมพ์แทน หรือฟังแล้วพูดตามเอง";return}
+var rec=new SR();rec.lang="en-US";rec.interimResults=false;r.textContent="กำลังฟัง… พูดได้เลย";m.textContent="🎙️ ...";
+rec.onresult=function(e){check(e.results[0][0].transcript)};
+rec.onerror=function(e){r.textContent=(e.error==="not-allowed"||e.error==="service-not-allowed")?"ไมค์ถูกบล็อก: ไปที่ไอคอนแม่กุญแจข้างที่อยู่เว็บ แล้วอนุญาตไมโครโฟน":"ฟังไม่ได้ ("+e.error+") ลองพิมพ์แทนได้"};
+rec.onend=function(){var b=$("#mic");if(b)b.textContent="🎤 พูดตาม"};
+try{rec.start()}catch(x){}}
+function check(said){var L=D[st.i].lines[st.j],tw=norm(L.reply),sw=norm(said),hit=0,out=[];
+tw.forEach(function(w){if(sw.indexOf(w)>-1){hit++;out.push('<span class="ok">'+esc(w)+'</span>')}else out.push('<span class="w">'+esc(w)+'</span>')});
+var p=tw.length?Math.round(hit/tw.length*100):0;
+if(p>=80){prog[st.i]=Math.max(prog[st.i]||0,st.j+1);save()}
+$("#res").innerHTML='ได้ยินว่า: “'+esc(said)+'”<br>'+out.join(" ")+'<br><b>'+p+'%</b> '+(p>=80?"เยี่ยมมาก! 🎉":p>=50?"ใกล้แล้ว ลองอีกครั้ง":"ฟังตัวอย่างแล้วลองใหม่นะ")}
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+init();
+</script>
+</body>
+</html>
