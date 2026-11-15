@@ -38,18 +38,18 @@ var DEF=[{title:"รับผู้โดยสาร",emoji:"🚗",lines:[
 {passenger:"Can you put my bag in the trunk?",passengerTh:"ช่วยใส่กระเป๋าในท้ายรถได้ไหม",reply:"Sure, no problem. Let me open it for you.",replyTh:"ได้ครับ เดี๋ยวผมเปิดให้"},
 {passenger:"Could you turn the air-con up a bit?",passengerTh:"ช่วยเร่งแอร์หน่อยได้ไหม",reply:"Sure. Is that better?",replyTh:"ได้ครับ แบบนี้ดีขึ้นไหมครับ"}]}];
 var $=function(s){return document.querySelector(s)};
-var D=[],st={i:0,j:0,th:true},prog={};
+var D=[],st={i:0,j:0,th:true},prog={},T={dir:"th",auto:true,hist:[]};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function save(){try{localStorage.setItem("ge_data",JSON.stringify(D));localStorage.setItem("ge_prog",JSON.stringify(prog))}catch(x){}}
 function init(){try{prog=JSON.parse(localStorage.getItem("ge_prog")||"{}");var r=localStorage.getItem("ge_data");if(r){D=JSON.parse(r);if(D.length){home();return}}}catch(x){}
 reset()}
 function reset(){D=JSON.parse(JSON.stringify(DEF));prog={};save();home()}
-function speak(t){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u)}catch(x){}}
+function speak(t,lang){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang=lang||"en-US";u.rate=.9;speechSynthesis.speak(u)}catch(x){}}
 function norm(s){return s.toLowerCase().replace(/[’']/g,"").replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(Boolean)}
 function form(title,labels,vals,cb,back){var h='<h1>'+title+'</h1>';labels.forEach(function(l,i){h+='<div class="lbl">'+l+'</div><textarea id="f'+i+'" rows="2">'+esc(vals[i]||"")+'</textarea>'});
 h+='<div class="row" style="margin-top:12px"><button class="btn" id="fs">บันทึก</button><button class="btn o" id="fc">ยกเลิก</button></div>';
 $("#app").innerHTML=h;$("#fs").onclick=function(){cb(labels.map(function(_,i){return $("#f"+i).value.trim()}))};$("#fc").onclick=back}
-function home(){var h='<div class="top"><h1>🚕 Grab English</h1><button class="link" onclick="backup()">สำรอง/นำเข้า</button></div><p class="sub">ฝึกพูดกับผู้โดยสารต่างชาติ ใช้ออฟไลน์ได้</p>';
+function home(){var h='<div class="top"><h1>🚕 Grab English</h1><button class="link" onclick="backup()">สำรอง/นำเข้า</button></div><p class="sub">ฝึกพูดกับผู้โดยสารต่างชาติ ใช้ออฟไลน์ได้</p><button class="btn" style="width:100%;margin-bottom:12px" onclick="trans()">🌐 แปลภาษาด้วยเสียง ไทย ⇄ อังกฤษ</button>';
 D.forEach(function(s,k){h+='<div class="card row"><button class="sc" style="flex:1;border:0;background:none;padding:0" onclick="go('+k+')"><span class="em">'+esc(s.emoji)+'</span><span><b>'+esc(s.title)+'</b><small>ผ่านแล้ว '+Math.min(prog[k]||0,s.lines.length)+'/'+s.lines.length+' ประโยค</small></span></button><button class="link" onclick="editScn('+k+')">แก้ไข</button></div>'});
 h+='<button class="btn" onclick="editScn(-1)">＋ เพิ่มหมวดใหม่</button><p class="tip">ปุ่มไมค์ต้องอนุญาตไมโครโฟนและมีเน็ต ถ้าไมค์ไม่ทำงานให้พิมพ์ประโยคที่พูดแทนได้</p>';
 $("#app").innerHTML=h}
@@ -91,6 +91,31 @@ tw.forEach(function(w){if(sw.indexOf(w)>-1){hit++;out.push('<span class="ok">'+e
 var p=tw.length?Math.round(hit/tw.length*100):0;
 if(p>=80){prog[st.i]=Math.max(prog[st.i]||0,st.j+1);save()}
 $("#res").innerHTML='ได้ยินว่า: “'+esc(said)+'”<br>'+out.join(" ")+'<br><b>'+p+'%</b> '+(p>=80?"เยี่ยมมาก! 🎉":p>=50?"ใกล้แล้ว ลองอีกครั้ง":"ฟังตัวอย่างแล้วลองใหม่นะ")}
+function trans(){var th=T.dir==="th";
+$("#app").innerHTML='<div class="top"><button class="link" onclick="home()">← กลับ</button><span>🌐 แปลภาษา</span><span></span></div>'+
+'<div class="card row" style="justify-content:space-between"><b>'+(th?"🇹🇭 ไทย → 🇬🇧 English":"🇬🇧 English → 🇹🇭 ไทย")+'</b><button class="btn o" id="sw">⇄ สลับ</button></div>'+
+'<button class="btn" id="tm" style="width:100%;font-size:18px;padding:18px">🎤 กดแล้วพูด'+(th?"ภาษาไทย":" English")+'</button>'+
+'<div class="row" style="margin-top:10px;flex-wrap:nowrap"><input id="ti" placeholder="หรือพิมพ์ข้อความ"><button class="btn o" id="tg">แปล</button></div>'+
+'<label class="tip" style="display:block;margin:10px 0"><input type="checkbox" id="ta" style="width:auto"'+(T.auto?" checked":"")+'> อ่านคำแปลออกเสียงอัตโนมัติ</label>'+
+'<div id="tr"></div><p class="tip">ต้องมีอินเทอร์เน็ต ใช้ได้กับประโยคสั้น ๆ ผลแปลอาจไม่แม่นยำทุกประโยค</p>';
+$("#sw").onclick=function(){T.dir=th?"en":"th";trans();showT()};
+$("#tm").onclick=listenT;
+$("#tg").onclick=function(){doTr($("#ti").value.trim())};
+$("#ta").onchange=function(){T.auto=this.checked};
+showT()}
+function showT(){var h="";T.hist.forEach(function(x,i){h+='<div class="card'+(i?'':' you')+'"><div class="th">'+esc(x.s)+'</div><div class="en" style="font-size:'+(i?18:26)+'px">'+esc(x.o)+'</div><button class="link" data-i="'+i+'">🔊 ฟัง</button></div>'});
+var e=$("#tr");if(!e)return;e.innerHTML=h;
+e.querySelectorAll("button[data-i]").forEach(function(b){b.onclick=function(){var x=T.hist[+b.dataset.i];speak(x.o,x.d==="th"?"en-US":"th-TH")}})}
+function tr(t,f,to){return fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(t.slice(0,150))+"&langpair="+f+"|"+to).then(function(r){return r.json()}).then(function(j){var o=j.responseData&&j.responseData.translatedText;if(!o||/MYMEMORY WARNING/i.test(o))throw new Error("limit");var d=document.createElement("textarea");d.innerHTML=o;return d.value})}
+function doTr(t){if(!t)return;var th=T.dir==="th",e=$("#tr");if(e)e.insertAdjacentHTML("afterbegin",'<p class="tip" id="tw">กำลังแปล…</p>');
+tr(t,th?"th":"en",th?"en":"th").then(function(o){T.hist.unshift({s:t,o:o,d:T.dir});T.hist=T.hist.slice(0,6);showT();if(T.auto)speak(o,th?"en-US":"th-TH")}).catch(function(){var w=$("#tw");if(w)w.textContent="แปลไม่ได้ ตรวจอินเทอร์เน็ต หรืออาจใช้ครบโควต้าฟรีของวันนี้แล้ว"})}
+function listenT(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition,th=T.dir==="th",b=$("#tm");
+if(!SR){alert("เครื่องนี้ไม่รองรับการจดจำเสียง ให้พิมพ์แทน");return}
+var rec=new SR();rec.lang=th?"th-TH":"en-US";rec.interimResults=false;b.textContent="🎙️ กำลังฟัง…";
+rec.onresult=function(e){var t=e.results[0][0].transcript;var i=$("#ti");if(i)i.value=t;doTr(t)};
+rec.onerror=function(e){alert((e.error==="not-allowed"||e.error==="service-not-allowed")?"ไมค์ถูกบล็อก: อนุญาตไมโครโฟนที่ไอคอนแม่กุญแจข้างที่อยู่เว็บ":"ฟังไม่ได้ ("+e.error+") ลองพิมพ์แทนได้")};
+rec.onend=function(){var x=$("#tm");if(x)x.textContent="🎤 กดแล้วพูด"+(T.dir==="th"?"ภาษาไทย":" English")};
+try{rec.start()}catch(x){}}
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
 init();
 </script>
